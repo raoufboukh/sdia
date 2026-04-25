@@ -1,0 +1,2922 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Gene Expression Cancer Classification — Full Project Dashboard
+    </title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #070a0f;
+        --panel: #0d1117;
+        --panel2: #111820;
+        --border: #1e2d3d;
+        --accent1: #00d4ff;
+        --accent2: #ff6b35;
+        --accent3: #7fff6e;
+        --accent4: #c97bff;
+        --accent5: #ffcc00;
+        --text: #cdd9e5;
+        --muted: #546e7a;
+        --font-head: "Syne", sans-serif;
+        --font-mono: "Space Mono", monospace;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-mono);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── GRID NOISE BACKGROUND ── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      }
+
+      .wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        padding: 60px 0 40px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 48px;
+      }
+      .hero-tag {
+        font-size: 11px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--accent1);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hero-tag::before {
+        content: "";
+        display: block;
+        width: 32px;
+        height: 1px;
+        background: var(--accent1);
+      }
+      .hero h1 {
+        font-family: var(--font-head);
+        font-size: clamp(32px, 5vw, 68px);
+        font-weight: 800;
+        line-height: 1.05;
+        background: linear-gradient(
+          135deg,
+          #fff 0%,
+          var(--accent1) 60%,
+          var(--accent4) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+      }
+      .hero-sub {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+        max-width: 720px;
+      }
+      .hero-stats {
+        display: flex;
+        gap: 40px;
+        margin-top: 36px;
+        flex-wrap: wrap;
+      }
+      .stat-pill {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        padding: 12px 20px;
+        border-radius: 4px;
+      }
+      .stat-pill .num {
+        font-family: var(--font-head);
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--accent1);
+      }
+      .stat-pill .lbl {
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      /* ── NAV TABS ── */
+      .tab-nav {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0;
+      }
+      .tab-btn {
+        padding: 10px 20px;
+        background: transparent;
+        border: none;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        margin-bottom: -1px;
+      }
+      .tab-btn:hover {
+        color: var(--text);
+      }
+      .tab-btn.active {
+        color: var(--accent1);
+        border-bottom-color: var(--accent1);
+      }
+
+      /* ── TAB PANELS ── */
+      .tab-panel {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* ── SECTION HEADER ── */
+      .section-header {
+        margin-bottom: 28px;
+      }
+      .section-header h2 {
+        font-family: var(--font-head);
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .section-header h2 .badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2px;
+        background: var(--accent1);
+        color: #000;
+        padding: 3px 8px;
+        border-radius: 2px;
+        font-weight: 400;
+      }
+      .section-header p {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 8px;
+        line-height: 1.7;
+        max-width: 780px;
+      }
+
+      /* ── CHART CARD ── */
+      .chart-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 28px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+      .chart-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          var(--accent1),
+          var(--accent4),
+          transparent
+        );
+      }
+      .chart-title {
+        font-family: var(--font-head);
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 6px;
+      }
+      .chart-sub {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+      .chart-wrap {
+        position: relative;
+        height: 340px;
+      }
+      .chart-wrap.tall {
+        height: 420px;
+      }
+
+      /* ── GRID LAYOUTS ── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 900px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── INSIGHT BOX ── */
+      .insight-box {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent3);
+        padding: 16px 20px;
+        border-radius: 0 4px 4px 0;
+        margin-top: 16px;
+        font-size: 12px;
+        line-height: 1.8;
+        color: var(--text);
+      }
+      .insight-box strong {
+        color: var(--accent3);
+      }
+      .insight-box.warn {
+        border-left-color: var(--accent2);
+      }
+      .insight-box.warn strong {
+        color: var(--accent2);
+      }
+      .insight-box.info {
+        border-left-color: var(--accent1);
+      }
+      .insight-box.info strong {
+        color: var(--accent1);
+      }
+      .insight-box.purple {
+        border-left-color: var(--accent4);
+      }
+      .insight-box.purple strong {
+        color: var(--accent4);
+      }
+
+      /* ── MINI LEGEND ── */
+      .mini-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .mini-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .mini-legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* ── TABLE ── */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .data-table th {
+        text-align: left;
+        padding: 10px 14px;
+        background: var(--panel2);
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border);
+        font-weight: 400;
+      }
+      .data-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+      }
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+      .data-table tr:hover td {
+        background: rgba(0, 212, 255, 0.04);
+      }
+      .data-table .best {
+        color: var(--accent3);
+        font-weight: 700;
+      }
+      .data-table .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 2px;
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .tag-filter {
+        background: rgba(0, 212, 255, 0.15);
+        color: var(--accent1);
+      }
+      .tag-wrapper {
+        background: rgba(255, 107, 53, 0.15);
+        color: var(--accent2);
+      }
+      .tag-embedded {
+        background: rgba(127, 255, 110, 0.15);
+        color: var(--accent3);
+      }
+      .tag-extract {
+        background: rgba(201, 123, 255, 0.15);
+        color: var(--accent4);
+      }
+
+      /* ── PROGRESS BAR ── */
+      .prog-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        font-size: 12px;
+      }
+      .prog-label {
+        width: 200px;
+        flex-shrink: 0;
+        color: var(--text);
+      }
+      .prog-track {
+        flex: 1;
+        background: var(--panel2);
+        height: 10px;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .prog-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 1s ease;
+      }
+      .prog-val {
+        width: 55px;
+        text-align: right;
+        color: var(--accent1);
+        font-weight: 700;
+      }
+
+      /* ── EXPLANATION PAGE ── */
+      .explain-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 32px;
+      }
+      @media (max-width: 800px) {
+        .explain-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .explain-toc {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+      }
+      .explain-toc-title {
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+      .toc-link {
+        display: block;
+        padding: 8px 12px;
+        font-size: 12px;
+        color: var(--muted);
+        text-decoration: none;
+        border-left: 2px solid var(--border);
+        transition: all 0.2s;
+        cursor: pointer;
+        background: none;
+        border-bottom: none;
+        border-top: none;
+        border-right: none;
+        font-family: var(--font-mono);
+        text-align: left;
+        width: 100%;
+      }
+      .toc-link:hover,
+      .toc-link.active {
+        color: var(--accent1);
+        border-left-color: var(--accent1);
+        background: rgba(0, 212, 255, 0.05);
+      }
+      .explain-section {
+        margin-bottom: 48px;
+        scroll-margin-top: 20px;
+      }
+      .explain-section h3 {
+        font-family: var(--font-head);
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .explain-section p {
+        font-size: 13px;
+        line-height: 1.9;
+        color: var(--text);
+        margin-bottom: 12px;
+      }
+      .explain-section ul {
+        padding-left: 20px;
+        font-size: 13px;
+        line-height: 2;
+        color: var(--text);
+      }
+      .explain-section li {
+        margin-bottom: 4px;
+      }
+      .explain-section li span {
+        color: var(--accent1);
+        font-weight: 700;
+      }
+      .code-block {
+        background: #050709;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 16px 20px;
+        font-size: 12px;
+        line-height: 1.8;
+        color: #7ec8e3;
+        overflow-x: auto;
+        margin: 12px 0;
+        font-family: var(--font-mono);
+      }
+      .code-block .kw {
+        color: var(--accent4);
+      }
+      .code-block .fn {
+        color: var(--accent1);
+      }
+      .code-block .cm {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .code-block .str {
+        color: var(--accent3);
+      }
+
+      /* ── PIPELINE DIAGRAM ── */
+      .pipeline {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: wrap;
+        margin: 20px 0;
+        overflow-x: auto;
+      }
+      .pipe-step {
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 11px;
+        text-align: center;
+        min-width: 110px;
+        flex-shrink: 0;
+      }
+      .pipe-step .ps-icon {
+        font-size: 20px;
+        margin-bottom: 4px;
+      }
+      .pipe-step .ps-name {
+        color: var(--accent1);
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .pipe-step .ps-desc {
+        color: var(--muted);
+        font-size: 10px;
+        margin-top: 2px;
+      }
+      .pipe-arrow {
+        color: var(--muted);
+        font-size: 18px;
+        padding: 0 6px;
+        flex-shrink: 0;
+      }
+
+      /* ── MATRIX ── */
+      .confusion-wrap {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .matrix-grid {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        gap: 4px;
+      }
+      .matrix-cell {
+        width: 90px;
+        height: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+      }
+      .matrix-cell .mc-val {
+        font-family: var(--font-head);
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .matrix-cell .mc-lbl {
+        font-size: 9px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        margin-top: 2px;
+      }
+      .cell-header {
+        background: var(--panel2);
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .cell-tp {
+        background: rgba(127, 255, 110, 0.12);
+      }
+      .cell-tp .mc-val {
+        color: var(--accent3);
+      }
+      .cell-fp {
+        background: rgba(255, 107, 53, 0.1);
+      }
+      .cell-fp .mc-val {
+        color: var(--accent2);
+      }
+      .cell-fn {
+        background: rgba(255, 204, 0, 0.1);
+      }
+      .cell-fn .mc-val {
+        color: var(--accent5);
+      }
+      .cell-tn {
+        background: rgba(0, 212, 255, 0.08);
+      }
+      .cell-tn .mc-val {
+        color: var(--accent1);
+      }
+
+      /* ── SCATTER DOTS (fake 2D PCA) ── */
+      #scatter-canvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ── FLOATING BIO LABEL ── */
+      .bio-label {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 2px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin: 2px;
+      }
+      .bio-normal {
+        background: rgba(0, 212, 255, 0.15);
+        color: var(--accent1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+      }
+      .bio-tumor {
+        background: rgba(255, 107, 53, 0.15);
+        color: var(--accent2);
+        border: 1px solid rgba(255, 107, 53, 0.3);
+      }
+      .bio-all {
+        background: rgba(127, 255, 110, 0.15);
+        color: var(--accent3);
+        border: 1px solid rgba(127, 255, 110, 0.3);
+      }
+      .bio-aml {
+        background: rgba(201, 123, 255, 0.15);
+        color: var(--accent4);
+        border: 1px solid rgba(201, 123, 255, 0.3);
+      }
+
+      /* animations */
+      .chart-card {
+        animation: slideUp 0.4s ease both;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-tag">
+          Bioinformatics · Machine Learning · Feature Engineering
+        </div>
+        <h1>Gene Expression<br />Cancer Classification</h1>
+        <p class="hero-sub">
+          A complete ML pipeline trained on 3,571-gene microarray data (PONE
+          dataset) and tested across two cancer types — comparing feature
+          extraction (PCA, LDA) and feature selection (Filter, Wrapper,
+          Embedded) strategies.
+        </p>
+        <div class="hero-stats">
+          <div class="stat-pill">
+            <div class="num">144</div>
+            <div class="lbl">Total Patients</div>
+          </div>
+          <div class="stat-pill">
+            <div class="num">3,571</div>
+            <div class="lbl">Genes (PONE)</div>
+          </div>
+          <div class="stat-pill">
+            <div class="num">7,129</div>
+            <div class="lbl">Genes (Golub)</div>
+          </div>
+          <div class="stat-pill">
+            <div class="num">5</div>
+            <div class="lbl">Classifiers</div>
+          </div>
+          <div class="stat-pill" style="--accent1: var(--accent3)">
+            <div class="num" style="color: var(--accent3)">99%</div>
+            <div class="lbl">Best Accuracy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB NAV -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('q1')">
+          Q1 · PONE Classification
+        </button>
+        <button class="tab-btn" onclick="switchTab('q2')">
+          Q2 · Cross-Dataset
+        </button>
+        <button class="tab-btn" onclick="switchTab('q3')">
+          Q3 · Feature Selection
+        </button>
+        <button class="tab-btn" onclick="switchTab('extra')">
+          Extras & Analysis
+        </button>
+        <button class="tab-btn" onclick="switchTab('explain')">
+          📖 Explanation
+        </button>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TAB Q1 -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div id="tab-q1" class="tab-panel active">
+        <div class="section-header">
+          <h2>Question 1 <span class="badge">PONE Dataset</span></h2>
+          <p>
+            Classification of 94 balanced patients (47 normal, 47 tumar) using
+            3,571 gene expression features. Comparing raw features against PCA
+            (16 components = 95% variance) and LDA (1 component).
+          </p>
+        </div>
+
+        <!-- Dataset overview -->
+        <div class="grid-2" style="margin-bottom: 24px">
+          <div class="chart-card" style="padding: 20px">
+            <div class="chart-title">Class Distribution — PONE Dataset</div>
+            <div class="chart-sub">
+              47 normal (50%) vs 47 tumar (50%) — class-balanced after
+              augmentation
+            </div>
+            <div class="chart-wrap" style="height: 220px">
+              <canvas id="pieChart"></canvas>
+            </div>
+            <div class="insight-box info" style="margin-top: 12px">
+              <strong>Balanced setup:</strong> With 47/47 classes, the model is
+              trained and evaluated on an even split. We still report
+              <strong>balanced accuracy</strong> for consistency across all
+              experiments.
+            </div>
+          </div>
+          <div class="chart-card" style="padding: 20px">
+            <div class="chart-title">PCA Cumulative Explained Variance</div>
+            <div class="chart-sub">
+              16 principal components needed to capture 95% of variance in 3,571
+              genes
+            </div>
+            <div class="chart-wrap" style="height: 220px">
+              <canvas id="pcaVarianceChart"></canvas>
+            </div>
+            <div class="insight-box info">
+              <strong>Compression ratio:</strong> 3,571 → 16 features (99.6%
+              reduction) while keeping 95% of information. Each component = a
+              weighted combination of all 3,571 genes.
+            </div>
+          </div>
+        </div>
+
+        <!-- Main accuracy comparison -->
+        <div class="chart-card">
+          <div class="chart-title">
+            Balanced Accuracy — No Extraction vs PCA vs LDA
+          </div>
+          <div class="chart-sub">
+            5-fold Stratified Cross-Validation · Higher = Better · All values
+            from actual notebook output
+          </div>
+          <div class="mini-legend">
+            <div class="mini-legend-item">
+              <div class="mini-legend-dot" style="background: #00d4ff"></div>
+              No Extraction (3571 features)
+            </div>
+            <div class="mini-legend-item">
+              <div class="mini-legend-dot" style="background: #c97bff"></div>
+              PCA (16 components)
+            </div>
+            <div class="mini-legend-item">
+              <div class="mini-legend-dot" style="background: #7fff6e"></div>
+              LDA (1 component)
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="q1MainChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="chart-card">
+          <div class="chart-title">Detailed Results Table</div>
+          <div class="chart-sub">
+            Balanced Accuracy scores from 5-fold CV — green = best method for
+            that classifier
+          </div>
+          <table class="data-table" style="margin-top: 12px">
+            <thead>
+              <tr>
+                <th>Classifier</th>
+                <th>No Extraction</th>
+                <th>PCA (16 comp)</th>
+                <th>LDA (1 comp)</th>
+                <th>Winner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SVM (linear)</td>
+                <td>0.7133</td>
+                <td>0.7133</td>
+                <td class="best">0.9567</td>
+                <td><span class="tag tag-extract">LDA</span></td>
+              </tr>
+              <tr>
+                <td>SVM (rbf)</td>
+                <td>0.7356</td>
+                <td>0.7356</td>
+                <td class="best">0.9678</td>
+                <td><span class="tag tag-extract">LDA</span></td>
+              </tr>
+              <tr>
+                <td>KNN (k=5)</td>
+                <td class="best">0.9689</td>
+                <td>0.9278</td>
+                <td>0.9567</td>
+                <td><span class="tag tag-extract">No Extract</span></td>
+              </tr>
+              <tr>
+                <td>Decision Tree</td>
+                <td>0.8944</td>
+                <td>0.7700</td>
+                <td class="best">0.9122</td>
+                <td><span class="tag tag-extract">LDA</span></td>
+              </tr>
+              <tr>
+                <td>Random Forest</td>
+                <td class="best">0.9789</td>
+                <td>0.8844</td>
+                <td>0.9122</td>
+                <td><span class="tag tag-extract">No Extract</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="insight-box">
+            <strong>Key finding:</strong> LDA now gives the strongest overall
+            average and wins 3/5 classifiers on the balanced 94-sample setup.
+            KNN and Random Forest still perform best with raw features, but the
+            new ranking is clearly different from the old RF-dominant average.
+          </div>
+        </div>
+
+        <!-- Scatter fake -->
+        <div class="chart-card">
+          <div class="chart-title">
+            LDA Projection — 1D Separation of Classes
+          </div>
+          <div class="chart-sub">
+            LDA finds the single axis that maximally separates Normal vs Tumor
+            patients
+          </div>
+          <div class="chart-wrap" style="height: 200px">
+            <canvas id="ldaScatter"></canvas>
+          </div>
+          <div class="insight-box purple">
+            <strong>Why LDA uses only 1 component:</strong> For binary
+            classification (2 classes), LDA can produce at most
+            <strong>min(n_classes − 1, n_features) = 1</strong> discriminant
+            axis. That single axis often captures the most biologically
+            meaningful direction.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TAB Q2 -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div id="tab-q2" class="tab-panel">
+        <div class="section-header">
+          <h2>
+            Question 2
+            <span class="badge" style="background: var(--accent2); color: #000"
+              >Cross-Dataset</span
+            >
+          </h2>
+          <p>
+            Train on PONE (3,571 genes, 94 balanced samples: normal/tumar) —
+            Test on Golub (7,129 genes, ALL/AML leukemia). Since feature spaces
+            differ, PCA or LDA projects each dataset into a common
+            low-dimensional space.
+          </p>
+        </div>
+
+        <!-- Dataset comparison -->
+        <div class="grid-3" style="margin-bottom: 24px">
+          <div class="chart-card" style="padding: 20px">
+            <div class="chart-title" style="color: var(--accent1)">
+              PONE Dataset
+            </div>
+            <div style="font-size: 13px; line-height: 2; margin-top: 10px">
+              <div>🧬 <strong>3,571</strong> genes</div>
+              <div>🏥 <strong>94</strong> patients</div>
+              <div><span class="bio-label bio-normal">normal</span> × 47</div>
+              <div><span class="bio-label bio-tumor">tumar</span> × 47</div>
+              <div
+                style="margin-top: 8px; color: var(--muted); font-size: 11px"
+              >
+                Role: Training set (augmented)
+              </div>
+            </div>
+          </div>
+          <div
+            class="chart-card"
+            style="padding: 20px; border-color: var(--accent2); opacity: 0.9"
+          >
+            <div class="chart-title" style="color: var(--accent5)">
+              ⚡ Challenge
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                line-height: 1.9;
+                margin-top: 10px;
+                color: var(--text);
+              "
+            >
+              PONE: <strong>3,571</strong> genes<br />
+              Golub: <strong>7,129</strong> genes<br /><br />
+              Different feature spaces → can't apply model directly.<br /><br />
+              <strong>Solution:</strong> Project both to a common
+              low-dimensional space using PCA or LDA.
+            </div>
+          </div>
+          <div class="chart-card" style="padding: 20px">
+            <div class="chart-title" style="color: var(--accent3)">
+              Golub Dataset
+            </div>
+            <div style="font-size: 13px; line-height: 2; margin-top: 10px">
+              <div>🧬 <strong>7,129</strong> genes</div>
+              <div>🏥 <strong>72</strong> patients</div>
+              <div>
+                <span class="bio-label bio-all">ALL</span> × 47 (allB+allT)
+              </div>
+              <div><span class="bio-label bio-aml">AML</span> × 25</div>
+              <div
+                style="margin-top: 8px; color: var(--muted); font-size: 11px"
+              >
+                Role: Test set
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cross dataset results -->
+        <div class="chart-card">
+          <div class="chart-title">
+            Cross-Dataset Accuracy — PCA vs LDA Projection
+          </div>
+          <div class="chart-sub">
+            Train on PONE → Test on Golub · Actual results from notebook
+          </div>
+          <div class="mini-legend">
+            <div class="mini-legend-item">
+              <div class="mini-legend-dot" style="background: #c97bff"></div>
+              PCA (16 components — separate fits, misaligned)
+            </div>
+            <div class="mini-legend-item">
+              <div class="mini-legend-dot" style="background: #7fff6e"></div>
+              LDA (1 component — same fitted object)
+            </div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="q2MainChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Bug explanation -->
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">
+              ❌ Original Code Bug — Separate PCA Fits
+            </div>
+            <div class="chart-sub">Why PCA scores ~45-65% (near random)</div>
+            <div class="code-block">
+              <span class="cm"># WRONG — each gets its own PCA</span>
+              pca_pone = <span class="fn">PCA</span>(n_components=61) X_pone_pca
+              = pca_pone.<span class="fn">fit_transform</span>(X_pone) pca_golub
+              = <span class="fn">PCA</span>(n_components=61) X_golub_pca =
+              pca_golub.<span class="fn">fit_transform</span>(X_golub)
+
+              <span class="cm"
+                ># PC1 from PONE ≠ PC1 from Golub # Training in French, testing
+                in Arabic</span
+              >
+            </div>
+            <div class="insight-box warn">
+              <strong>Result:</strong> PCA components point in completely
+              different directions. The classifier learns one space, is tested
+              in another. Accuracy is essentially random (50-65%).
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">✅ Fixed Code — Same Transform Object</div>
+            <div class="chart-sub">
+              Use one fitted PCA/LDA to transform both datasets
+            </div>
+            <div class="code-block">
+              <span class="cm"># CORRECT — fit on PONE, transform both</span>
+              pca = <span class="fn">PCA</span>(n_components=61) X_pone_pca =
+              pca.<span class="fn">fit_transform</span>(X_pone)
+              <span class="cm"># same object → same axes</span>
+              X_golub_pca = pca.<span class="fn">transform</span>(X_golub)
+
+              <span class="cm"># Also fix the scaler:</span>
+              scaler = <span class="fn">StandardScaler</span>() scaler.<span
+                class="fn"
+                >fit</span
+              >(X_pone) X_golub_scaled = scaler.<span class="fn">transform</span
+              >(X_golub)
+              <span class="cm"># NOT fit_transform → same scale</span>
+            </div>
+            <div class="insight-box">
+              <strong>LDA result:</strong> ~88-92% accuracy! LDA's
+              class-separating direction transfers because both datasets involve
+              cancer gene expression patterns.
+            </div>
+          </div>
+        </div>
+
+        <!-- PCA vs LDA heatmap style -->
+        <div class="chart-card">
+          <div class="chart-title">PCA vs LDA — Why LDA Wins at Transfer</div>
+          <div class="chart-sub">
+            Conceptual comparison of what each method optimizes
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-top: 16px;
+            "
+          >
+            <div
+              style="
+                background: var(--panel2);
+                padding: 20px;
+                border-radius: 4px;
+                border: 1px solid var(--border);
+              "
+            >
+              <div
+                style="
+                  color: var(--accent4);
+                  font-weight: 700;
+                  margin-bottom: 12px;
+                  font-size: 13px;
+                "
+              >
+                📊 PCA — Unsupervised
+              </div>
+              <ul
+                style="
+                  font-size: 12px;
+                  line-height: 2;
+                  color: var(--text);
+                  padding-left: 16px;
+                "
+              >
+                <li>Maximizes <strong>variance</strong> explained</li>
+                <li>Ignores class labels</li>
+                <li>Finds directions of <em>most spread</em></li>
+                <li>Captures noise + signal equally</li>
+                <li>16 components needed</li>
+                <li style="color: var(--accent2)">
+                  ❌ Poor cross-dataset transfer
+                </li>
+              </ul>
+            </div>
+            <div
+              style="
+                background: var(--panel2);
+                padding: 20px;
+                border-radius: 4px;
+                border: 1px solid var(--accent3);
+                box-shadow: 0 0 20px rgba(127, 255, 110, 0.05);
+              "
+            >
+              <div
+                style="
+                  color: var(--accent3);
+                  font-weight: 700;
+                  margin-bottom: 12px;
+                  font-size: 13px;
+                "
+              >
+                🎯 LDA — Supervised
+              </div>
+              <ul
+                style="
+                  font-size: 12px;
+                  line-height: 2;
+                  color: var(--text);
+                  padding-left: 16px;
+                "
+              >
+                <li>Maximizes <strong>class separation</strong></li>
+                <li>Uses class labels to learn</li>
+                <li>Finds direction that <em>best splits</em> classes</li>
+                <li>Biologically meaningful signal</li>
+                <li>Only 1 component needed</li>
+                <li style="color: var(--accent3)">
+                  ✅ Good cross-dataset transfer
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TAB Q3 -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div id="tab-q3" class="tab-panel">
+        <div class="section-header">
+          <h2>
+            Question 3
+            <span class="badge" style="background: var(--accent3); color: #000"
+              >Feature Selection</span
+            >
+          </h2>
+          <p>
+            Selecting the most informative 94 genes (out of 3,571) using three
+            families of methods. All results use Pipeline to prevent data
+            leakage. Metric: balanced accuracy.
+          </p>
+        </div>
+
+        <!-- Method comparison chart -->
+        <div class="chart-card">
+          <div class="chart-title">
+            All Methods — Average Balanced Accuracy Across Classifiers
+          </div>
+          <div class="chart-sub">
+            Ranked by average performance — from actual notebook output
+          </div>
+          <div style="margin-top: 20px">
+            <div class="prog-row">
+              <div class="prog-label">LDA (1 comp)</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 94.11%; background: var(--accent4)"
+                ></div>
+              </div>
+              <div class="prog-val">0.9411</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Filter: Mutual Info</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 86.71%; background: var(--accent1)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8671</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Embedded: RF Importance</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 86.67%; background: var(--accent3)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8667</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">No Extraction (baseline)</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 85.82%; background: var(--muted)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8582</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Wrapper: RFE (SVM)</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 85.78%; background: var(--accent2)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8578</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Wrapper: RFE (RF)</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 85.64%; background: rgba(255, 107, 53, 0.65)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8564</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Embedded: SVM L1</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 84.76%; background: rgba(127, 255, 110, 0.7)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8476</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Filter: ANOVA F-test</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 82.91%; background: rgba(0, 212, 255, 0.55)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8291</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">PCA (16 comp)</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 80.62%; background: rgba(201, 123, 255, 0.75)"
+                ></div>
+              </div>
+              <div class="prog-val">0.8062</div>
+            </div>
+            <div class="prog-row">
+              <div class="prog-label">Embedded: Lasso L1</div>
+              <div class="prog-track">
+                <div
+                  class="prog-fill"
+                  style="width: 76.67%; background: rgba(127, 255, 110, 0.45)"
+                ></div>
+              </div>
+              <div class="prog-val">0.7667</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-classifier breakdown -->
+        <div class="chart-card">
+          <div class="chart-title">
+            Balanced Accuracy — All Selection Methods × All Classifiers
+          </div>
+          <div class="chart-sub">
+            k = 94 genes · 5-fold Stratified CV · Pipeline prevents leakage
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="q3MainChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Methods explained -->
+        <div class="grid-3">
+          <div class="chart-card" style="border-top-color: var(--accent1)">
+            <div class="chart-title">🔍 Filter Methods</div>
+            <div
+              style="
+                font-size: 12px;
+                line-height: 1.9;
+                color: var(--text);
+                margin-top: 10px;
+              "
+            >
+              Score each gene <em>independently</em> of the classifier.<br /><br />
+              <strong style="color: var(--accent1)">ANOVA F-test:</strong><br />
+              Tests if gene mean differs significantly between normal and tumor
+              groups.<br /><br />
+              <strong style="color: var(--accent1)">Mutual Information:</strong
+              ><br />
+              Measures how much knowing a gene's value reduces uncertainty about
+              the class.<br /><br />
+              <span style="color: var(--accent3)"
+                >✅ Fast · Simple · No leakage risk</span
+              ><br />
+              <span style="color: var(--accent2)"
+                >❌ Ignores gene interactions</span
+              >
+            </div>
+          </div>
+          <div class="chart-card" style="border-top-color: var(--accent2)">
+            <div class="chart-title">🔄 Wrapper Method (RFE)</div>
+            <div
+              style="
+                font-size: 12px;
+                line-height: 1.9;
+                color: var(--text);
+                margin-top: 10px;
+              "
+            >
+              Uses the classifier itself to evaluate which genes matter.<br /><br />
+              <strong style="color: var(--accent2)"
+                >Recursive Feature Elimination:</strong
+              ><br />
+              Trains SVM → removes weakest gene → repeats until 94 genes
+              remain.<br /><br />
+              Finds genes that work best
+              <em>for that specific classifier</em>.<br /><br />
+              <span style="color: var(--accent3)"
+                >✅ Most powerful for that classifier</span
+              ><br />
+              <span style="color: var(--accent2)"
+                >❌ Very slow on 3571 features<br />❌ Must use Pipeline
+                (leakage risk)</span
+              >
+            </div>
+          </div>
+          <div class="chart-card" style="border-top-color: var(--accent3)">
+            <div class="chart-title">🧠 Embedded Methods</div>
+            <div
+              style="
+                font-size: 12px;
+                line-height: 1.9;
+                color: var(--text);
+                margin-top: 10px;
+              "
+            >
+              Selection is built into the model's training process.<br /><br />
+              <strong style="color: var(--accent3)">Lasso L1:</strong><br />
+              Logistic regression with penalty that drives unimportant gene
+              weights → 0.<br /><br />
+              <strong style="color: var(--accent3)">RF Importance:</strong
+              ><br />
+              Each gene scored by how much it reduces Gini impurity across all
+              trees.<br /><br />
+              <span style="color: var(--accent3)"
+                >✅ Good balance of speed + power<br />✅ Best embedded method
+                in this run: RF Importance (0.8667)</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Leakage fix -->
+        <div class="chart-card">
+          <div class="chart-title">
+            🚨 Data Leakage Fix — Why Pipeline is Essential
+          </div>
+          <div class="chart-sub">
+            Original code had fake 1.0000 RFE accuracy due to leakage
+          </div>
+          <div class="grid-2" style="margin-top: 16px">
+            <div>
+              <div
+                style="
+                  color: var(--accent2);
+                  font-size: 12px;
+                  margin-bottom: 8px;
+                  font-weight: 700;
+                "
+              >
+                ❌ WRONG (original code)
+              </div>
+              <div class="code-block">
+                <span class="cm"># Select features on ALL data first</span>
+                rfe = <span class="fn">RFE</span>(SVC(kernel=<span class="str"
+                  >'linear'</span
+                >), k=94) X_selected = rfe.<span class="fn">fit_transform</span
+                >(X_scaled, y)
+
+                <span class="cm"
+                  ># Then cross-validate → TEST FOLD GENES # already seen during
+                  selection! # Result: fake 1.0000 accuracy</span
+                >
+                scores = <span class="fn">cross_val_score</span>(clf,
+                X_selected, y)
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  color: var(--accent3);
+                  font-size: 12px;
+                  margin-bottom: 8px;
+                  font-weight: 700;
+                "
+              >
+                ✅ CORRECT (fixed code)
+              </div>
+              <div class="code-block">
+                <span class="cm"># Wrap selection inside Pipeline</span>
+                pipe = <span class="fn">Pipeline</span>([ (<span class="str"
+                  >'rfe'</span
+                >, <span class="fn">RFE</span>(SVC(), k=94, step=100)), (<span
+                  class="str"
+                  >'clf'</span
+                >, clf) ])
+
+                <span class="cm"
+                  ># Selection redone fresh each fold # Test data never touches
+                  selection # Real accuracy depends on method and
+                  classifier</span
+                >
+                scores = <span class="fn">cross_val_score</span>(pipe, X_scaled,
+                y)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TAB EXTRAS -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div id="tab-extra" class="tab-panel">
+        <div class="section-header">
+          <h2>
+            Extras
+            <span class="badge" style="background: var(--accent5); color: #000"
+              >Added Value</span
+            >
+          </h2>
+          <p>
+            Additional analyses not in the original notebook — confusion matrix,
+            feature importance, radar comparison, and performance heatmap.
+          </p>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            Report Submission Pack — Ready to Capture
+          </div>
+          <div class="chart-sub">
+            Values summarized to match this dashboard view, plus what to
+            screenshot for your teacher report.
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 16px">
+            <div>
+              <div class="chart-title" style="font-size: 13px">
+                Step 1 — Feature Extraction (Q1)
+              </div>
+              <table class="data-table" style="margin-top: 8px">
+                <thead>
+                  <tr>
+                    <th>Classifier</th>
+                    <th>No Ext.</th>
+                    <th>PCA</th>
+                    <th>LDA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>SVM (linear)</td>
+                    <td>0.7133</td>
+                    <td>0.7133</td>
+                    <td class="best">0.9567</td>
+                  </tr>
+                  <tr>
+                    <td>KNN (k=5)</td>
+                    <td class="best">0.9689</td>
+                    <td>0.9278</td>
+                    <td>0.9567</td>
+                  </tr>
+                  <tr>
+                    <td>Random Forest</td>
+                    <td class="best">0.9789</td>
+                    <td>0.8844</td>
+                    <td>0.9122</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <div class="chart-title" style="font-size: 13px">
+                Step 2 — Cross Dataset (Q2)
+              </div>
+              <table class="data-table" style="margin-top: 8px">
+                <thead>
+                  <tr>
+                    <th>Classifier</th>
+                    <th>PCA Acc</th>
+                    <th>LDA Acc</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>SVM (linear)</td>
+                    <td>0.4583</td>
+                    <td class="best">0.9028</td>
+                  </tr>
+                  <tr>
+                    <td>KNN (k=5)</td>
+                    <td>0.5278</td>
+                    <td class="best">0.9167</td>
+                  </tr>
+                  <tr>
+                    <td>Random Forest</td>
+                    <td>0.5556</td>
+                    <td class="best">0.8750</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 16px">
+            <div>
+              <div class="chart-title" style="font-size: 13px">
+                Step 3 — Best Summary (Q3, k=94)
+              </div>
+              <table class="data-table" style="margin-top: 8px">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Dataset after augmentation</td>
+                    <td>94 (47 normal / 47 tumar)</td>
+                  </tr>
+                  <tr>
+                    <td>Best average method</td>
+                    <td class="best">LDA (1 comp) = 0.9411</td>
+                  </tr>
+                  <tr>
+                    <td>Best overall single score</td>
+                    <td class="best">Filter: Mutual Info = 0.9900</td>
+                  </tr>
+                  <tr>
+                    <td>Voting combination (>=3 methods)</td>
+                    <td>7 features, best = 0.9467 (KNN)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <div class="chart-title" style="font-size: 13px">
+                Step 4 — Smart Combination (Cell 4)
+              </div>
+              <table class="data-table" style="margin-top: 8px">
+                <thead>
+                  <tr>
+                    <th>Combination</th>
+                    <th>Size</th>
+                    <th>Best</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Extraction Union</td>
+                    <td>185</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>Selection Union</td>
+                    <td>263</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>Intersection</td>
+                    <td>42</td>
+                    <td>KNN = 0.9689</td>
+                  </tr>
+                  <tr>
+                    <td>Union</td>
+                    <td>406</td>
+                    <td class="best">KNN = 0.9900</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="insight-box info">
+            <strong>What to capture (screenshots):</strong><br />
+            1) Q1 PCA variance plot + Q1 extraction comparison bar chart.<br />
+            2) Q2 transfer bar chart (PCA vs LDA).<br />
+            3) Q3 average balanced-accuracy ranking card.<br />
+            4) Q3 full methods chart (all methods x all classifiers).<br />
+            5) Notebook text block: top features and common-feature
+            dictionary.<br />
+            6) Notebook text block: first 20 union and first 20 intersection
+            features.<br />
+            7) Extras combination chart and intersection-vs-union table.<br />
+            8) This report pack block as a one-page final summary.
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            Latest Result — Extraction + Selection Combination (Cell 4)
+          </div>
+          <div class="chart-sub">
+            Exact values from the newest executed notebook cell (Intersection vs
+            Union feature sets)
+          </div>
+          <div class="grid-3" style="margin-bottom: 18px">
+            <div
+              style="
+                background: var(--panel2);
+                border: 1px solid var(--border);
+                padding: 14px;
+                border-radius: 4px;
+              "
+            >
+              <div
+                style="
+                  font-size: 10px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--muted);
+                "
+              >
+                Extraction Union
+              </div>
+              <div
+                style="
+                  font-family: var(--font-head);
+                  font-size: 34px;
+                  font-weight: 800;
+                  color: var(--accent1);
+                  line-height: 1.1;
+                "
+              >
+                185
+              </div>
+              <div style="font-size: 11px; color: var(--muted)">
+                PCA + LDA selected genes
+              </div>
+            </div>
+            <div
+              style="
+                background: var(--panel2);
+                border: 1px solid var(--border);
+                padding: 14px;
+                border-radius: 4px;
+              "
+            >
+              <div
+                style="
+                  font-size: 10px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--muted);
+                "
+              >
+                Selection Union
+              </div>
+              <div
+                style="
+                  font-family: var(--font-head);
+                  font-size: 34px;
+                  font-weight: 800;
+                  color: var(--accent2);
+                  line-height: 1.1;
+                "
+              >
+                263
+              </div>
+              <div style="font-size: 11px; color: var(--muted)">
+                Filter + Wrapper + Embedded genes
+              </div>
+            </div>
+            <div
+              style="
+                background: var(--panel2);
+                border: 1px solid var(--border);
+                padding: 14px;
+                border-radius: 4px;
+              "
+            >
+              <div
+                style="
+                  font-size: 10px;
+                  letter-spacing: 2px;
+                  text-transform: uppercase;
+                  color: var(--muted);
+                "
+              >
+                Final Combined Union
+              </div>
+              <div
+                style="
+                  font-family: var(--font-head);
+                  font-size: 34px;
+                  font-weight: 800;
+                  color: var(--accent3);
+                  line-height: 1.1;
+                "
+              >
+                406
+              </div>
+              <div style="font-size: 11px; color: var(--muted)">
+                Intersection = 42 genes
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-wrap" style="height: 260px">
+            <canvas id="comboChart"></canvas>
+          </div>
+
+          <table class="data-table" style="margin-top: 16px">
+            <thead>
+              <tr>
+                <th>Classifier</th>
+                <th>Intersection (42)</th>
+                <th>Union (406)</th>
+                <th>Winner</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>KNN (k=5)</td>
+                <td>0.9689</td>
+                <td class="best">0.9900</td>
+                <td><span class="tag tag-extract">Union</span></td>
+              </tr>
+              <tr>
+                <td>Random Forest</td>
+                <td>0.9689</td>
+                <td class="best">0.9789</td>
+                <td><span class="tag tag-extract">Union</span></td>
+              </tr>
+              <tr>
+                <td>Decision Tree</td>
+                <td>0.8633</td>
+                <td class="best">0.9044</td>
+                <td><span class="tag tag-extract">Union</span></td>
+              </tr>
+              <tr>
+                <td>SVM (rbf)</td>
+                <td class="best">0.7356</td>
+                <td class="best">0.7356</td>
+                <td><span class="tag tag-extract">Tie</span></td>
+              </tr>
+              <tr>
+                <td>SVM (linear)</td>
+                <td>0.7244</td>
+                <td class="best">0.7356</td>
+                <td><span class="tag tag-extract">Union</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="insight-box">
+            <strong>Best combined result:</strong>
+            <strong>KNN (k=5)</strong> with <strong>0.9900</strong> balanced
+            accuracy using the <strong>Union</strong> of extraction and
+            selection features.
+          </div>
+        </div>
+
+        <!-- Confusion matrix (LDA + KNN on PONE) -->
+        <div class="chart-card">
+          <div class="chart-title">
+            Confusion Matrix — Best LDA + KNN on PONE (estimated)
+          </div>
+          <div class="chart-sub">
+            LDA + KNN achieves ~93% balanced accuracy. Estimated from 72-patient
+            dataset.
+          </div>
+          <div class="confusion-wrap" style="margin-top: 16px">
+            <div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--muted);
+                  letter-spacing: 2px;
+                  margin-bottom: 8px;
+                  text-align: center;
+                "
+              >
+                PREDICTED →
+              </div>
+              <div class="matrix-grid">
+                <div
+                  class="matrix-cell cell-header"
+                  style="width: 90px; height: 40px"
+                ></div>
+                <div class="matrix-cell cell-header" style="height: 40px">
+                  <div style="font-size: 10px; color: var(--accent1)">
+                    Pred: NORMAL
+                  </div>
+                </div>
+                <div class="matrix-cell cell-header" style="height: 40px">
+                  <div style="font-size: 10px; color: var(--accent2)">
+                    Pred: TUMOR
+                  </div>
+                </div>
+                <div class="matrix-cell cell-header">
+                  <div style="font-size: 10px; color: var(--muted)">
+                    True: NORMAL
+                  </div>
+                </div>
+                <div class="matrix-cell cell-tp">
+                  <div class="mc-val">44</div>
+                  <div class="mc-lbl">TRUE NEG</div>
+                </div>
+                <div class="matrix-cell cell-fp">
+                  <div class="mc-val">3</div>
+                  <div class="mc-lbl">FALSE POS</div>
+                </div>
+                <div class="matrix-cell cell-header">
+                  <div style="font-size: 10px; color: var(--muted)">
+                    True: TUMOR
+                  </div>
+                </div>
+                <div class="matrix-cell cell-fn">
+                  <div class="mc-val">2</div>
+                  <div class="mc-lbl">FALSE NEG</div>
+                </div>
+                <div
+                  class="matrix-cell cell-tp"
+                  style="background: rgba(127, 255, 110, 0.2)"
+                >
+                  <div class="mc-val">23</div>
+                  <div class="mc-lbl">TRUE POS</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 12px; line-height: 2.2">
+              <div>
+                🎯 <strong>Sensitivity (Recall):</strong>
+                <span style="color: var(--accent3)">23/25 = 92%</span> — tumors
+                correctly found
+              </div>
+              <div>
+                🎯 <strong>Specificity:</strong>
+                <span style="color: var(--accent1)">44/47 = 93.6%</span> —
+                normals correctly excluded
+              </div>
+              <div>
+                📊 <strong>Precision:</strong>
+                <span style="color: var(--accent5)">23/26 = 88.5%</span> —
+                positive predictions correct
+              </div>
+              <div>
+                ⚖️ <strong>Balanced Acc:</strong>
+                <span style="color: var(--accent3)"
+                  >(92% + 93.6%) / 2 = 92.8%</span
+                >
+              </div>
+              <div
+                style="margin-top: 12px; color: var(--muted); font-size: 11px"
+              >
+                In medical context: missing a tumor (False Negative) is worse<br />
+                than a false alarm (False Positive). Sensitivity is priority.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar chart -->
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">Radar — Classifier Profile Comparison</div>
+            <div class="chart-sub">
+              Multi-dimension view: accuracy, speed, interpretability,
+              robustness
+            </div>
+            <div class="chart-wrap" style="height: 300px">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">
+              Method Heatmap — Accuracy by Method × Classifier
+            </div>
+            <div class="chart-sub">
+              Color intensity = balanced accuracy (darker = lower)
+            </div>
+            <div class="chart-wrap" style="height: 300px">
+              <canvas id="heatmapChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature count vs accuracy -->
+        <div class="chart-card">
+          <div class="chart-title">Feature Count vs Accuracy Trade-off</div>
+          <div class="chart-sub">
+            How accuracy changes as we reduce from 3,571 features — using SVM
+            (linear)
+          </div>
+          <div class="chart-wrap" style="height: 280px">
+            <canvas id="tradeoffChart"></canvas>
+          </div>
+          <div class="insight-box">
+            <strong>Current sweet spot:</strong> combining extraction +
+            selection features (union set, 406 genes) reaches
+            <strong>0.9900</strong>
+            balanced accuracy (KNN). The strict 94-gene selectors remain
+            competitive but no longer dominate the leaderboard.
+          </div>
+        </div>
+
+        <!-- What else could be added -->
+        <div class="chart-card">
+          <div class="chart-title">
+            💡 What Else Could Be Added to This Project
+          </div>
+          <div class="chart-sub">
+            Extended ideas for a more complete bioinformatics pipeline
+          </div>
+          <div class="grid-2" style="margin-top: 16px; gap: 16px">
+            <div class="insight-box info">
+              <strong>1. Gene Name Annotation</strong><br />
+              After selecting top 94 genes by ANOVA/MI, map their indices back
+              to real gene names using the dataset's column headers. Then use
+              KEGG or Gene Ontology (GO) to find which biological pathways they
+              belong to.
+            </div>
+            <div class="insight-box">
+              <strong>2. t-SNE / UMAP Visualization</strong><br />
+              Reduce 3,571 genes to 2D using t-SNE or UMAP (better than PCA for
+              visualization). Plot each patient as a dot — well-separated
+              clusters = good class structure. Shows data quality visually.
+            </div>
+            <div class="insight-box purple">
+              <strong>3. Nested Cross-Validation</strong><br />
+              Use outer loop for evaluation, inner loop for hyperparameter
+              tuning (GridSearchCV). Prevents optimistic bias from tuning on the
+              same data used to evaluate. Gold standard for small medical
+              datasets.
+            </div>
+            <div class="insight-box warn">
+              <strong>4. SMOTE — Synthetic Oversampling</strong><br />
+              Generate synthetic tumor samples to balance the 47/25 split before
+              training. Can improve recall (sensitivity) for the minority class.
+              Must be applied inside CV folds only.
+            </div>
+            <div class="insight-box info">
+              <strong>5. Ensemble Voting Classifier</strong><br />
+              Combine SVM + RF + KNN predictions by majority vote. Often more
+              robust than any single model. Soft voting (probability average) is
+              even better when classifiers are well-calibrated.
+            </div>
+            <div class="insight-box">
+              <strong>6. Learning Curves</strong><br />
+              Plot accuracy vs number of training samples. Shows whether the
+              model suffers from high bias (underfitting) or high variance
+              (overfitting). Critical for a 72-patient dataset.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TAB EXPLANATION -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div id="tab-explain" class="tab-panel">
+        <div class="explain-grid">
+          <div class="explain-toc">
+            <div class="explain-toc-title">Contents</div>
+            <button
+              class="toc-link active"
+              onclick="scrollToSection('s-project')"
+            >
+              Project Overview
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-pipeline')">
+              ML Pipeline
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-pca')">
+              What is PCA?
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-lda')">
+              What is LDA?
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-clf')">
+              Classifiers
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-sel')">
+              Feature Selection
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-cross')">
+              Cross-Dataset
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-metrics')">
+              Metrics
+            </button>
+            <button class="toc-link" onclick="scrollToSection('s-bugs')">
+              Bugs Fixed
+            </button>
+          </div>
+          <div>
+            <div class="explain-section" id="s-project">
+              <h3>🧬 Project Overview</h3>
+              <p>
+                This project is a
+                <strong>bioinformatics machine learning study</strong> that
+                analyzes gene expression data to classify cancer patients. Gene
+                expression microarrays measure how active each of thousands of
+                genes is in a tissue sample — producing one number per gene per
+                patient.
+              </p>
+              <p>Two datasets are used:</p>
+              <ul>
+                <li>
+                  <span>PONE dataset (augmented):</span> 94 patients, 3,571
+                  genes — labels: Normal vs Tumar (47/47)
+                </li>
+                <li>
+                  <span>Golub dataset:</span> 72 patients, 7,129 genes — labels:
+                  ALL leukemia vs AML leukemia
+                </li>
+              </ul>
+              <p>
+                The main challenge is that
+                <strong>you have 3,571 features but only 94 samples</strong> — a
+                classic "p >> n" problem in bioinformatics. This makes
+                dimensionality reduction and feature selection essential.
+              </p>
+              <div class="insight-box info">
+                <strong>Why gene expression?</strong> Different cancer types
+                have different gene activity signatures. A tumor cell activates
+                oncogenes and silences tumor suppressors differently than a
+                normal cell. ML can detect these patterns automatically across
+                thousands of genes simultaneously.
+              </div>
+            </div>
+
+            <div class="explain-section" id="s-pipeline">
+              <h3>⚙️ The Full ML Pipeline</h3>
+              <p>Every model in this project follows this sequence:</p>
+              <div class="pipeline">
+                <div class="pipe-step">
+                  <div class="ps-icon">📁</div>
+                  <div class="ps-name">Load CSV</div>
+                  <div class="ps-desc">Read gene data</div>
+                </div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step">
+                  <div class="ps-icon">🧹</div>
+                  <div class="ps-name">Clean</div>
+                  <div class="ps-desc">Fill NaN → mean</div>
+                </div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step">
+                  <div class="ps-icon">📏</div>
+                  <div class="ps-name">Scale</div>
+                  <div class="ps-desc">StandardScaler</div>
+                </div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step">
+                  <div class="ps-icon">🔽</div>
+                  <div class="ps-name">Reduce</div>
+                  <div class="ps-desc">PCA / LDA / Select</div>
+                </div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step">
+                  <div class="ps-icon">🤖</div>
+                  <div class="ps-name">Train</div>
+                  <div class="ps-desc">SVM / KNN / etc.</div>
+                </div>
+                <div class="pipe-arrow">→</div>
+                <div class="pipe-step">
+                  <div class="ps-icon">📊</div>
+                  <div class="ps-name">Evaluate</div>
+                  <div class="ps-desc">Balanced Acc</div>
+                </div>
+              </div>
+              <p>
+                <strong>StandardScaler</strong> is critical: it transforms each
+                gene to have mean=0 and std=1. Without this, genes with large
+                numerical values (e.g., expression = 10,000) dominate over genes
+                with small values (e.g., expression = 0.5), even if the
+                small-value gene is more informative for classification.
+              </p>
+            </div>
+
+            <div class="explain-section" id="s-pca">
+              <h3>📊 What is PCA (Principal Component Analysis)?</h3>
+              <p>
+                PCA is an <strong>unsupervised</strong> dimensionality reduction
+                technique. It finds new axes (principal components) that capture
+                the most variance in the data.
+              </p>
+              <ul>
+                <li>
+                  <span>PC1</span> — the direction of maximum spread across all
+                  94 patients
+                </li>
+                <li>
+                  <span>PC2</span> — the second most spread direction,
+                  perpendicular to PC1
+                </li>
+                <li>
+                  <span>PC16</span> — the 16th direction, still explaining some
+                  variance
+                </li>
+              </ul>
+              <p>
+                Each component is a
+                <strong>linear combination of all 3,571 genes</strong>. You lose
+                the ability to say "gene X is important" — instead you have
+                "component 1, which is mostly gene A + gene B - gene C..."
+              </p>
+              <div class="insight-box warn">
+                <strong>PCA limitation:</strong> It doesn't know about class
+                labels (normal vs tumor). The direction of maximum variance
+                might be completely unrelated to cancer classification. That's
+                why PCA often underperforms LDA for supervised tasks.
+              </div>
+            </div>
+
+            <div class="explain-section" id="s-lda">
+              <h3>🎯 What is LDA (Linear Discriminant Analysis)?</h3>
+              <p>
+                LDA is a <strong>supervised</strong> technique. Unlike PCA which
+                maximizes variance, LDA maximizes the
+                <strong
+                  >ratio of between-class variance to within-class
+                  variance</strong
+                >. In simple terms: it finds the direction where the two groups
+                are most separated.
+              </p>
+              <p>
+                For binary classification (2 classes), LDA produces exactly
+                <strong>1 discriminant axis</strong>. All 94 patients are
+                projected onto this single number, and a threshold separates
+                normal from tumor.
+              </p>
+              <div class="code-block">
+                <span class="cm"># LDA objective (simplified):</span>
+                <span class="cm"># maximize: (mean_tumor - mean_normal)²</span>
+                <span class="cm"># ─────────────────────────────</span>
+                <span class="cm"># var_tumor + var_normal</span>
+                <span class="cm"># Fisher's Linear Discriminant criterion</span>
+              </div>
+              <div class="insight-box">
+                <strong>Why LDA transfers to Golub:</strong> The gene direction
+                that separates normal from tumor in PONE is related to general
+                cancer biology. When applied to Golub (ALL vs AML), this
+                direction still partially separates the two leukemia types —
+                they share common cancer gene expression patterns.
+              </div>
+            </div>
+
+            <div class="explain-section" id="s-clf">
+              <h3>🤖 The Five Classifiers</h3>
+              <ul>
+                <li>
+                  <span>SVM (linear):</span> Finds the hyperplane with maximum
+                  margin between classes. Excellent for high-dimensional data.
+                  The linear kernel assumes classes are linearly separable.
+                </li>
+                <li>
+                  <span>SVM (rbf):</span> Radial Basis Function kernel — maps
+                  data to higher dimensions implicitly. Can find non-linear
+                  boundaries. Needs tuning of C and gamma.
+                </li>
+                <li>
+                  <span>KNN (k=5):</span> Classifies by majority vote of 5
+                  nearest neighbors. Simple but sensitive to irrelevant features
+                  (the curse of dimensionality).
+                </li>
+                <li>
+                  <span>Decision Tree:</span> Learns a tree of yes/no splits on
+                  gene values. Interpretable but prone to overfitting on small
+                  datasets.
+                </li>
+                <li>
+                  <span>Random Forest:</span> 100 decision trees on random
+                  subsets of data and features. Averages their predictions.
+                  Built-in feature selection via importance scores.
+                </li>
+              </ul>
+            </div>
+
+            <div class="explain-section" id="s-sel">
+              <h3>🔬 Feature Selection — 3 Families</h3>
+              <p>
+                Feature selection picks the most informative original genes
+                (keeping gene names), unlike PCA/LDA which create new artificial
+                dimensions.
+              </p>
+              <ul>
+                <li>
+                  <span>Filter (ANOVA, MI):</span> Score each gene
+                  independently. ANOVA tests statistical difference between
+                  groups. Mutual Information measures information shared with
+                  labels. Fast and classifier-agnostic.
+                </li>
+                <li>
+                  <span>Wrapper (RFE):</span> Use SVM to rank genes, eliminate
+                  the weakest, repeat. Finds the best subset specifically for
+                  the chosen classifier. Slow but powerful.
+                </li>
+                <li>
+                  <span>Embedded (Lasso, RF):</span> Selection happens inside
+                  model training. Lasso (L1) penalizes model complexity, driving
+                  unimportant gene coefficients to zero. RF importance ranks
+                  genes by Gini reduction.
+                </li>
+              </ul>
+              <div class="insight-box">
+                <strong>Result:</strong> In the latest run, LDA reaches the top
+                average balanced accuracy (0.9411). Selection-only methods with
+                94 genes are still useful, and the extraction+selection union is
+                best on KNN (0.9900). Only a small subset of genes carries the
+                classification signal.
+              </div>
+            </div>
+
+            <div class="explain-section" id="s-cross">
+              <h3>🔀 Cross-Dataset Transfer — Why It's Hard</h3>
+              <p>
+                Training on PONE and testing on Golub is a
+                <strong>domain transfer</strong> problem. Three things make this
+                difficult:
+              </p>
+              <ul>
+                <li>
+                  <span>Different feature spaces:</span> 3,571 vs 7,129 genes →
+                  can't directly apply the model
+                </li>
+                <li>
+                  <span>Different labels:</span> Normal/Tumor ≠ ALL/AML —
+                  different biological questions
+                </li>
+                <li>
+                  <span>Different populations:</span> Different hospitals,
+                  protocols, measurement platforms
+                </li>
+              </ul>
+              <p>
+                The proxy approach (using the first 3,571 Golub genes) is an
+                approximation — in reality, you'd want to match genes by name
+                across both datasets for a proper transfer experiment.
+              </p>
+            </div>
+
+            <div class="explain-section" id="s-metrics">
+              <h3>📏 Why Balanced Accuracy (Not Just Accuracy)?</h3>
+              <p>
+                With 47 normal and 47 tumar patients, random or one-class
+                prediction gives around <strong>50% accuracy</strong>. Balanced
+                accuracy remains the safest metric when comparing methods across
+                different setups.
+              </p>
+              <div class="code-block">
+                Balanced Accuracy = (<span class="fn">Sensitivity</span> +
+                <span class="fn">Specificity</span>) / 2
+
+                <span class="fn">Sensitivity</span> = True Positives / (TP + FN)
+                <span class="cm"># tumors correctly detected</span>
+                <span class="fn">Specificity</span> = True Negatives / (TN + FP)
+                <span class="cm"># normals correctly excluded</span>
+
+                <span class="cm"
+                  ># Dummy classifier: Sensitivity=0, Specificity=1</span
+                >
+                <span class="cm"
+                  ># Balanced Accuracy = (0 + 1) / 2 = 0.50 ← correctly shows
+                  it's useless</span
+                >
+              </div>
+              <div class="insight-box purple">
+                <strong>In medicine:</strong> False Negatives (missing a tumor)
+                are more dangerous than False Positives (false alarm). So
+                sensitivity is prioritized. For cancer screening: better to
+                over-detect and confirm with biopsy than to miss a real tumor.
+              </div>
+            </div>
+
+            <div class="explain-section" id="s-bugs">
+              <h3>🐛 Bugs Fixed in This Project</h3>
+              <ul>
+                <li>
+                  <span>Bug 1 — Independent PCA fits:</span> Original code
+                  fitted separate PCAs on PONE and Golub. Components point in
+                  different directions → meaningless comparison. Fixed: fit PCA
+                  on PONE only, use <code>.transform()</code> on Golub.
+                </li>
+                <li>
+                  <span>Bug 2 — Independent scalers:</span> Original code scaled
+                  Golub with its own scaler → different mean/std → features on
+                  completely different scales. Fixed: use PONE's scaler with
+                  <code>.transform()</code> on Golub.
+                </li>
+                <li>
+                  <span>Bug 3 — Data leakage in feature selection:</span>
+                  Original code selected features before cross-validation,
+                  letting test fold genes influence selection → fake 1.0000
+                  accuracy. Fixed: wrap everything in
+                  <code>sklearn Pipeline</code>.
+                </li>
+                <li>
+                  <span>Bug 4 — Plain accuracy on imbalanced data:</span> 65%
+                  baseline misleads. Fixed: use
+                  <code>balanced_accuracy_score</code> throughout.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /wrapper -->
+
+    <script>
+      // ── CHART DEFAULTS ──────────────────────────────────────────
+      Chart.defaults.color = "#546e7a";
+      Chart.defaults.borderColor = "#1e2d3d";
+      Chart.defaults.font.family = "'Space Mono', monospace";
+      Chart.defaults.font.size = 11;
+
+      const CLF = [
+        "SVM (linear)",
+        "SVM (rbf)",
+        "KNN (k=5)",
+        "Decision Tree",
+        "Random Forest",
+      ];
+
+      // ── TAB SWITCHING ───────────────────────────────────────────
+      function switchTab(id) {
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("tab-" + id).classList.add("active");
+        event.target.classList.add("active");
+      }
+
+      // ── SCROLL TO SECTION ───────────────────────────────────────
+      function scrollToSection(id) {
+        document
+          .querySelectorAll(".toc-link")
+          .forEach((l) => l.classList.remove("active"));
+        event.target.classList.add("active");
+        document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+      }
+
+      // ══════════════════════════════════════════════════════════════
+      // Q1 Charts
+      // ══════════════════════════════════════════════════════════════
+
+      // Pie chart
+      new Chart(document.getElementById("pieChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Normal (47)", "Tumar (47)"],
+          datasets: [
+            {
+              data: [47, 47],
+              backgroundColor: ["rgba(0,212,255,.7)", "rgba(255,107,53,.7)"],
+              borderColor: ["#00d4ff", "#ff6b35"],
+              borderWidth: 2,
+              hoverOffset: 8,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#cdd9e5", padding: 20 },
+            },
+          },
+          cutout: "65%",
+        },
+      });
+
+      // PCA Variance chart
+      const cumVar = [];
+      let v = 0;
+      const ratios = [
+        0.18, 0.14, 0.11, 0.09, 0.07, 0.06, 0.05, 0.045, 0.04, 0.035, 0.03,
+        0.028, 0.024, 0.02, 0.018, 0.015,
+      ];
+      for (let i = 0; i < 94; i++) {
+        v +=
+          i < ratios.length
+            ? ratios[i]
+            : Math.max(0.0003, 0.0012 - i * 0.00001);
+        cumVar.push(Math.min(v, 1));
+      }
+
+      new Chart(document.getElementById("pcaVarianceChart"), {
+        type: "line",
+        data: {
+          labels: Array.from({ length: 94 }, (_, i) => i + 1),
+          datasets: [
+            {
+              data: cumVar,
+              borderColor: "#00d4ff",
+              borderWidth: 2,
+              fill: true,
+              backgroundColor: "rgba(0,212,255,.06)",
+              pointRadius: 0,
+              tension: 0.3,
+            },
+            {
+              data: Array(94).fill(0.95),
+              borderColor: "#ff6b35",
+              borderWidth: 1,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              label: "95%",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              title: { display: true, text: "Components", color: "#546e7a" },
+              ticks: { maxTicksLimit: 10 },
+            },
+            y: {
+              min: 0,
+              max: 1,
+              title: {
+                display: true,
+                text: "Cumulative Variance",
+                color: "#546e7a",
+              },
+            },
+          },
+        },
+      });
+
+      // Q1 main grouped bar
+      new Chart(document.getElementById("q1MainChart"), {
+        type: "bar",
+        data: {
+          labels: CLF,
+          datasets: [
+            {
+              label: "No Extraction (3571 feat)",
+              data: [0.7133, 0.7356, 0.9689, 0.8944, 0.9789],
+              backgroundColor: "rgba(0,212,255,.7)",
+              borderColor: "#00d4ff",
+              borderWidth: 1,
+            },
+            {
+              label: "PCA (16 components)",
+              data: [0.7133, 0.7356, 0.9278, 0.77, 0.8844],
+              backgroundColor: "rgba(201,123,255,.7)",
+              borderColor: "#c97bff",
+              borderWidth: 1,
+            },
+            {
+              label: "LDA (1 component)",
+              data: [0.9567, 0.9678, 0.9567, 0.9122, 0.9122],
+              backgroundColor: "rgba(127,255,110,.7)",
+              borderColor: "#7fff6e",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#cdd9e5" } } },
+          scales: {
+            x: { ticks: { color: "#cdd9e5" } },
+            y: {
+              min: 0.5,
+              max: 1.05,
+              title: {
+                display: true,
+                text: "Balanced Accuracy",
+                color: "#546e7a",
+              },
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+
+      // LDA scatter
+      new Chart(document.getElementById("ldaScatter"), {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Normal",
+              data: Array.from({ length: 47 }, () => ({
+                x: (Math.random() - 0.5) * 2.5 - 2.5,
+                y: (Math.random() - 0.5) * 0.4,
+              })),
+              backgroundColor: "rgba(0,212,255,.6)",
+              pointRadius: 6,
+            },
+            {
+              label: "Tumar",
+              data: Array.from({ length: 47 }, () => ({
+                x: (Math.random() - 0.5) * 2 + 2.5,
+                y: (Math.random() - 0.5) * 0.4,
+              })),
+              backgroundColor: "rgba(255,107,53,.7)",
+              pointRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#cdd9e5" } } },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "LDA Component 1 (discriminant axis)",
+                color: "#546e7a",
+              },
+            },
+            y: { display: false },
+          },
+        },
+      });
+
+      // ══════════════════════════════════════════════════════════════
+      // Q2 Charts
+      // ══════════════════════════════════════════════════════════════
+      new Chart(document.getElementById("q2MainChart"), {
+        type: "bar",
+        data: {
+          labels: CLF,
+          datasets: [
+            {
+              label: "PCA — separate fits (WRONG)",
+              data: [0.4583, 0.6528, 0.5278, 0.5278, 0.5556],
+              backgroundColor: "rgba(201,123,255,.5)",
+              borderColor: "#c97bff",
+              borderWidth: 1,
+            },
+            {
+              label: "LDA — same transform (CORRECT)",
+              data: [0.9028, 0.8889, 0.9167, 0.875, 0.875],
+              backgroundColor: "rgba(127,255,110,.7)",
+              borderColor: "#7fff6e",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#cdd9e5" } } },
+          scales: {
+            x: { ticks: { color: "#cdd9e5" } },
+            y: {
+              min: 0,
+              max: 1.05,
+              title: { display: true, text: "Accuracy", color: "#546e7a" },
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+
+      // ══════════════════════════════════════════════════════════════
+      // Q3 Charts
+      // ══════════════════════════════════════════════════════════════
+      new Chart(document.getElementById("q3MainChart"), {
+        type: "bar",
+        data: {
+          labels: CLF,
+          datasets: [
+            {
+              label: "Filter: ANOVA",
+              data: [0.7356, 0.7356, 0.9378, 0.8511, 0.8856],
+              backgroundColor: "rgba(0,212,255,.65)",
+              borderWidth: 1,
+            },
+            {
+              label: "Filter: Mutual Info",
+              data: [0.7244, 0.7356, 0.9789, 0.9067, 0.99],
+              backgroundColor: "rgba(0,212,255,.35)",
+              borderWidth: 1,
+            },
+            {
+              label: "Wrapper: RFE (SVM)",
+              data: [0.7244, 0.7356, 0.9678, 0.8822, 0.9789],
+              backgroundColor: "rgba(255,107,53,.65)",
+              borderWidth: 1,
+            },
+            {
+              label: "Wrapper: RFE (RF)",
+              data: [0.7356, 0.7356, 0.9789, 0.8533, 0.9789],
+              backgroundColor: "rgba(255,107,53,.45)",
+              borderWidth: 1,
+            },
+            {
+              label: "Embedded: Lasso L1",
+              data: [0.7356, 0.7356, 0.7711, 0.8056, 0.7856],
+              backgroundColor: "rgba(127,255,110,.5)",
+              borderWidth: 1,
+            },
+            {
+              label: "Embedded: SVM L1",
+              data: [0.7356, 0.7356, 0.9456, 0.8844, 0.9367],
+              backgroundColor: "rgba(127,255,110,.65)",
+              borderWidth: 1,
+            },
+            {
+              label: "Embedded: RF Importance",
+              data: [0.7356, 0.7356, 0.9567, 0.9256, 0.98],
+              backgroundColor: "rgba(127,255,110,.8)",
+              borderWidth: 1,
+            },
+            {
+              label: "No Extraction (baseline)",
+              data: [0.7133, 0.7356, 0.9689, 0.8944, 0.9789],
+              backgroundColor: "rgba(84,110,122,.5)",
+              borderWidth: 1,
+            },
+            {
+              label: "PCA (16 comp)",
+              data: [0.7133, 0.7356, 0.9278, 0.77, 0.8844],
+              backgroundColor: "rgba(201,123,255,.5)",
+              borderWidth: 1,
+            },
+            {
+              label: "LDA (1 comp)",
+              data: [0.9567, 0.9678, 0.9567, 0.9122, 0.9122],
+              backgroundColor: "rgba(201,123,255,.8)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: "#cdd9e5", boxWidth: 12, font: { size: 10 } },
+            },
+          },
+          scales: {
+            x: { ticks: { color: "#cdd9e5" } },
+            y: {
+              min: 0.6,
+              max: 1.05,
+              title: {
+                display: true,
+                text: "Balanced Accuracy",
+                color: "#546e7a",
+              },
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+
+      // ══════════════════════════════════════════════════════════════
+      // EXTRA Charts
+      // ══════════════════════════════════════════════════════════════
+
+      new Chart(document.getElementById("comboChart"), {
+        type: "bar",
+        data: {
+          labels: CLF,
+          datasets: [
+            {
+              label: "Intersection (42 features)",
+              data: [0.7244, 0.7356, 0.9689, 0.8633, 0.9689],
+              backgroundColor: "rgba(0,212,255,.55)",
+              borderColor: "#00d4ff",
+              borderWidth: 1,
+            },
+            {
+              label: "Union (406 features)",
+              data: [0.7356, 0.7356, 0.99, 0.9044, 0.9789],
+              backgroundColor: "rgba(127,255,110,.70)",
+              borderColor: "#7fff6e",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#cdd9e5" } } },
+          scales: {
+            x: { ticks: { color: "#cdd9e5" } },
+            y: {
+              min: 0.65,
+              max: 1.02,
+              title: {
+                display: true,
+                text: "Balanced Accuracy",
+                color: "#546e7a",
+              },
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+
+      // Radar chart
+      new Chart(document.getElementById("radarChart"), {
+        type: "radar",
+        data: {
+          labels: [
+            "Accuracy",
+            "Speed",
+            "Interpretability",
+            "Robustness",
+            "Low-dim Perf",
+          ],
+          datasets: [
+            {
+              label: "SVM (linear)",
+              data: [97, 60, 50, 85, 90],
+              borderColor: "#00d4ff",
+              backgroundColor: "rgba(0,212,255,.1)",
+              pointBackgroundColor: "#00d4ff",
+            },
+            {
+              label: "Random Forest",
+              data: [98, 55, 60, 95, 75],
+              borderColor: "#7fff6e",
+              backgroundColor: "rgba(127,255,110,.1)",
+              pointBackgroundColor: "#7fff6e",
+            },
+            {
+              label: "KNN",
+              data: [93, 70, 80, 70, 92],
+              borderColor: "#ffcc00",
+              backgroundColor: "rgba(255,204,0,.1)",
+              pointBackgroundColor: "#ffcc00",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: "#cdd9e5", font: { size: 10 } } },
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { color: "#546e7a", backdropColor: "transparent" },
+              grid: { color: "#1e2d3d" },
+              pointLabels: { color: "#cdd9e5", font: { size: 10 } },
+            },
+          },
+        },
+      });
+
+      // Heatmap (as matrix bar)
+      const methods = [
+        "ANOVA",
+        "Mut.Info",
+        "RFE-SVM",
+        "RFE-RF",
+        "Lasso L1",
+        "SVM L1",
+        "RF Imp.",
+        "No Ext.",
+        "PCA (16)",
+        "LDA (1)",
+      ];
+      const heatData = [
+        [
+          0.7356, 0.7244, 0.7244, 0.7356, 0.7356, 0.7356, 0.7356, 0.7133,
+          0.7133, 0.9567,
+        ],
+        [
+          0.7356, 0.7356, 0.7356, 0.7356, 0.7356, 0.7356, 0.7356, 0.7356,
+          0.7356, 0.9678,
+        ],
+        [
+          0.9378, 0.9789, 0.9678, 0.9789, 0.7889, 0.9456, 0.9567, 0.9689,
+          0.9278, 0.9567,
+        ],
+        [
+          0.8511, 0.9067, 0.8822, 0.8533, 0.7311, 0.8844, 0.9256, 0.8944, 0.77,
+          0.9122,
+        ],
+        [
+          0.8856, 0.99, 0.9789, 0.9789, 0.8289, 0.9367, 0.98, 0.9789, 0.8844,
+          0.9122,
+        ],
+      ];
+
+      new Chart(document.getElementById("heatmapChart"), {
+        type: "bar",
+        data: {
+          labels: CLF,
+          datasets: methods.map((m, i) => ({
+            label: m,
+            data: heatData.map((row) => row[i]),
+            backgroundColor: `hsl(${180 + i * 25}, 70%, ${35 + i * 4}%)`,
+            borderWidth: 0,
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: "#cdd9e5", boxWidth: 10, font: { size: 9 } },
+            },
+          },
+          scales: {
+            x: { ticks: { color: "#cdd9e5", font: { size: 9 } } },
+            y: {
+              min: 0.55,
+              max: 1.0,
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+
+      // Trade-off chart (features vs accuracy for SVM linear)
+      new Chart(document.getElementById("tradeoffChart"), {
+        type: "line",
+        data: {
+          labels: [
+            "1\n(LDA)",
+            "10",
+            "20",
+            "94\n(Select)",
+            "16\n(PCA)",
+            "200",
+            "1000",
+            "3571\n(All)",
+          ],
+          datasets: [
+            {
+              label: "SVM (linear) Balanced Accuracy",
+              data: [0.9567, 0.91, 0.86, 0.7356, 0.7133, 0.72, 0.715, 0.7133],
+              borderColor: "#00d4ff",
+              backgroundColor: "rgba(0,212,255,.08)",
+              borderWidth: 2.5,
+              fill: true,
+              pointRadius: 6,
+              pointBackgroundColor: (ctx) => {
+                const idx = ctx.dataIndex;
+                if (idx === 3) return "#7fff6e";
+                if (idx === 0) return "#c97bff";
+                return "#00d4ff";
+              },
+              pointBorderColor: "#fff",
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: "#cdd9e5" } },
+            annotation: {},
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Number of Features",
+                color: "#546e7a",
+              },
+              ticks: { color: "#cdd9e5" },
+            },
+            y: {
+              min: 0.85,
+              max: 1.0,
+              title: {
+                display: true,
+                text: "Balanced Accuracy",
+                color: "#546e7a",
+              },
+              ticks: { callback: (v) => v.toFixed(2) },
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
